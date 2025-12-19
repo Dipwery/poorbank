@@ -1,0 +1,126 @@
+
+* {
+    box-sizing: border-box; 
+}
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+    color: #333;
+}
+
+header {
+    background-color: #4CAF50;
+    color: white;
+    text-align: center;
+    padding: 15px 10px;
+    width: 100%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+header h1 {
+    margin: 0;
+    font-size: 1.5em;
+}
+.container {
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    padding-bottom: 70px; 
+}
+
+#deposit-form {
+    width: 100%;
+    max-width: 450px;
+    margin: 0;
+    padding: 25px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: white;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+#deposit-form h2 {
+    margin-top: 0;
+    color: #4CAF50;
+    font-size: 1.2em;
+}
+#amount {
+    width: 100%;
+    margin-bottom: 20px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1em;
+    transition: border-color 0.3s;
+}
+
+#amount:focus {
+    border-color: #4CAF50;
+    outline: none;
+}
+
+#deposit-button {
+    width: 100%;
+    padding: 12px 20px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1.1em;
+    transition: background-color 0.3s, transform 0.1s;
+}
+
+#deposit-button:hover {
+    background-color: #45a049;
+}
+
+#deposit-button:active {
+    transform: translateY(1px);
+}
+/* Withdraw Form Styles */
+#withdraw-form {
+    width: 100%;
+    max-width: 450px;
+    margin: 0;
+    padding: 25px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: white;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+#withdraw-form h2 {
+    margin-top: 0;
+    color: #f44336;
+    font-size: 1.2em;
+}
+
+#withdraw-amount {
+    width: 100%;
+    margin-bottom: 20px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1em;
+}
+
+#withdraw-amount:focus {
+    border-color: #f44336;
+    outline: none;
+}
+
+#withdraw-button {
+    width: 100%;
+    padding: 12px 20px;
+    background-color: #f44336;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1.1em;
+}
