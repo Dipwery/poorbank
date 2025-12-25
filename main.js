@@ -3,7 +3,19 @@ const _supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 
 const supabaseClient = supabase.createClient(_supabaseUrl, _supabaseKey);
 
-// --- ১. সাইন আপ / সেভ ডাটা ---
+// --- ১. অটো লগইন সিস্টেম (পেজ লোড হলেই চেক করবে) ---
+function checkAutoLogin() {
+    const session = localStorage.getItem("userSession");
+    const path = window.location.pathname;
+
+    // যদি ইউজার ইন্ডেক্স পেজে থাকে এবং অলরেডি লগইন করা থাকে
+    if (session && (path.includes("index.html") || path === "/")) {
+        window.location.href = "home.html";
+    }
+}
+checkAutoLogin();
+
+// --- ২. সাইন আপ / নতুন অ্যাকাউন্ট ---
 async function saveData() {
     const email = document.getElementById('emailInput').value;
     const pass = document.getElementById('passwordInput').value;
@@ -14,7 +26,7 @@ async function saveData() {
     
     const { error } = await supabaseClient
         .from('entries')
-        .insert([{ content: text, tk: 0, nameuser: 'New User' }]); // tk number হিসেবে পাঠাচ্ছি
+        .insert([{ content: text, tk: 0, nameuser: 'New User' }]);
 
     if (error) alert("এরর: " + error.message);
     else {
@@ -24,7 +36,7 @@ async function saveData() {
     }
 }
 
-// --- ২. লগইন ফাংশন ---
+// --- ৩. ম্যানুয়াল লগইন ---
 async function showData() {
     const email = document.getElementById('emailInput').value;
     const pass = document.getElementById('passwordInput').value;
@@ -46,7 +58,7 @@ async function showData() {
     }
 }
 
-// --- ৩. টাকা জমা দেওয়া (Fix: 2030 logic) ---
+// --- ৪. টাকা জমা দেওয়া (Fix: 2030 logic) ---
 async function savetk() {
     const tkInput = document.getElementById('amount').value;
     const tkToAdd = parseFloat(tkInput); 
@@ -54,14 +66,13 @@ async function savetk() {
 
     if(!tkInput || isNaN(tkToAdd)) return alert("সঠিক টাকার অংক লিখুন!");
 
-    // বর্তমান ব্যালেন্স আনা
     const { data } = await supabaseClient
         .from('entries')
         .select('tk')
         .eq('content', userSession);
 
     const currentTk = parseFloat(data[0].tk) || 0;
-    const totalTk = currentTk + tkToAdd; // গাণিতিক যোগফল
+    const totalTk = currentTk + tkToAdd; 
 
     const { error } = await supabaseClient
         .from('entries')
@@ -70,21 +81,6 @@ async function savetk() {
 
     if(error) alert("এরর: " + error.message);
     else alert("টাকা সেভ হয়েছে!");
-}
-
-// --- ৪. ব্যালেন্স দেখা ---
-async function viewtk() {
-    const userSession = localStorage.getItem("userSession");
-    if(!userSession) return;
-
-    const { data } = await supabaseClient
-        .from('entries')
-        .select('tk')
-        .eq('content', userSession);
-
-    if(data && data[0]) {
-        document.getElementById('ttk').innerText = '৳' + data[0].tk;
-    }
 }
 
 // --- ৫. টাকা উইথড্র করা ---
@@ -113,7 +109,22 @@ async function witdrow() {
     else alert("টাকা উইথড্র হয়েছে!");
 }
 
-// --- ৬. ইউজার প্রোফাইল আপডেট (ফটোসহ) ---
+// --- ৬. ব্যালেন্স দেখা ---
+async function viewtk() {
+    const userSession = localStorage.getItem("userSession");
+    if(!userSession) return;
+
+    const { data } = await supabaseClient
+        .from('entries')
+        .select('tk')
+        .eq('content', userSession);
+
+    if(data && data[0]) {
+        document.getElementById('ttk').innerText = '৳' + data[0].tk;
+    }
+}
+
+// --- ৭. ইউজার প্রোফাইল আপডেট (ফটোসহ) ---
 async function updateUserInfo() {
     const name = document.getElementById('nameAccount').value;
     const newPassword = document.getElementById('changePassword').value;
@@ -134,19 +145,14 @@ async function updateUserInfo() {
         alert("এরর: " + error.message);
     } else {
         if(file){
-            const { error: uploadError } = await supabaseClient
-                .storage
-                .from('poorpbank')
-                .upload(email + '_profile', file, { upsert: true });
-
-            if (uploadError) alert("ফটো আপলোড এরর: " + uploadError.message);
+            await supabaseClient.storage.from('poorpbank').upload(email + '_profile', file, { upsert: true });
         }
         alert("ইনফো আপডেট হয়েছে!");
         localStorage.setItem("userSession", updatedSession); 
     }
 }
 
-// --- ৭. ইউজার ইনফো লোড করা (Home Page) ---
+// --- ৮. ইউজার ইনফো লোড করা ---
 async function loadUserInfo() {
     const userSession = localStorage.getItem("userSession");
     if(!userSession) return;
@@ -163,22 +169,26 @@ async function loadUserInfo() {
         if(document.getElementById('currentName')) document.getElementById('currentName').innerText = "Welcome, " + userName + "!";
         if(document.getElementById('Name')) document.getElementById('Name').innerText = "Welcome, " + userName;
 
-        const { data: photoData } = supabaseClient
-            .storage
-            .from('poorpbank')
-            .getPublicUrl(email + '_profile');
-
+        const { data: photoData } = supabaseClient.storage.from('poorpbank').getPublicUrl(email + '_profile');
         const finalUrl = photoData.publicUrl + "?t=" + new Date().getTime();
+        
         if(document.getElementById('currentPhoto')) document.getElementById('currentPhoto').src = finalUrl;
         if(document.getElementById('Photo')) document.getElementById('Photo').src = finalUrl;
     }
 }
+
 function logout() {
     localStorage.removeItem("userSession");
     window.location.href = "index.html";
 }
-if(window.location.pathname.includes("home.html") || window.location.pathname.includes("user.html")) {
-    loadUserInfo();
-    viewtk();
-    setInterval(viewtk, 1000);
+const path = window.location.pathname;
+if(path.includes("home.html") || path.includes("user.html")) {
+    const session = localStorage.getItem("userSession");
+    if(!session) {
+        window.location.href = "index.html";
+    } else {
+        loadUserInfo();
+        viewtk();
+        setInterval(viewtk, 1000); 
+    }
 }
