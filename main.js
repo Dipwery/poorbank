@@ -3,6 +3,7 @@ const _supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 
 const supabaseClient = supabase.createClient(_supabaseUrl, _supabaseKey);
 
+// --- ১. সাইন আপ / সেভ ডাটা ---
 async function saveData() {
     const email = document.getElementById('emailInput').value;
     const pass = document.getElementById('passwordInput').value;
@@ -13,28 +14,17 @@ async function saveData() {
     
     const { error } = await supabaseClient
         .from('entries')
-        .insert([{ content: text, tk: '0' }]);
+        .insert([{ content: text, tk: 0, nameuser: 'New User' }]); // tk number হিসেবে পাঠাচ্ছি
 
     if (error) alert("এরর: " + error.message);
     else {
-        alert("সেভ হয়েছে!");
+        alert("অ্যাকাউন্ট তৈরি হয়েছে!");
         localStorage.setItem("userSession", text); 
-    }
-    
-}
-function autofild(){
-    const sv= localStorage.getItem("userSession");
-    if(sv){
-        const parts = sv.split(" : ");
-        document.getElementById('emailInput').value = parts[0];
-        document.getElementById('passwordInput').value = parts[1];
         window.location.href = "home.html";
     }
 }
-setInterval(() => {
-    autofild();
-}, 1000);
 
+// --- ২. লগইন ফাংশন ---
 async function showData() {
     const email = document.getElementById('emailInput').value;
     const pass = document.getElementById('passwordInput').value;
@@ -42,78 +32,88 @@ async function showData() {
     
     const { data, error } = await supabaseClient
         .from('entries')
-        .select('content');
+        .select('content')
+        .eq('content', text);
         
     if (error) {
         alert("ডাটাবেস কানেকশন সমস্যা!");
-    } else if (data && data.some(entry => entry.content === text)) {
+    } else if (data && data.length > 0) {
         localStorage.setItem("userSession", text); 
-        alert("সঠিক তথ্য!");
+        alert("সফল লগইন!");
         window.location.href = "home.html";
     } else {
-        alert("ভুল তথ্য!");
+        alert("ভুল ইমেইল বা পাসওয়ার্ড!");
     }
 }
 
+// --- ৩. টাকা জমা দেওয়া (Fix: 2030 logic) ---
 async function savetk() {
-    const tk = document.getElementById('amount').value;
+    const tkInput = document.getElementById('amount').value;
+    const tkToAdd = parseFloat(tkInput); 
     const userSession = localStorage.getItem("userSession"); 
 
-    if(!tk) return alert("টাকা লিখুন!");
-        const { data } = await supabaseClient
-            .from('entries')
-            .select('tk')
-            .eq('content', userSession);
+    if(!tkInput || isNaN(tkToAdd)) return alert("সঠিক টাকার অংক লিখুন!");
 
-        const ttk= data[0].tk;
+    // বর্তমান ব্যালেন্স আনা
+    const { data } = await supabaseClient
+        .from('entries')
+        .select('tk')
+        .eq('content', userSession);
 
-
+    const currentTk = parseFloat(data[0].tk) || 0;
+    const totalTk = currentTk + tkToAdd; // গাণিতিক যোগফল
 
     const { error } = await supabaseClient
         .from('entries')
-        .update({ tk: tk+ttk })
+        .update({ tk: totalTk })
         .eq('content', userSession);
 
     if(error) alert("এরর: " + error.message);
     else alert("টাকা সেভ হয়েছে!");
 }
+
+// --- ৪. ব্যালেন্স দেখা ---
 async function viewtk() {
     const userSession = localStorage.getItem("userSession");
-     const { data } = await supabaseClient
-            .from('entries')
-            .select('tk')
-            .eq('content', userSession);
+    if(!userSession) return;
 
-        const ttk= data[0].tk;
-        document.getElementById('ttk').innerText = '৳' + ttk;
-}
-setInterval(() => {
-    viewtk();
-}, 1000);
-async function logout() {
-    localStorage.removeItem("userSession");
-    window.location.href = "index.html";
+    const { data } = await supabaseClient
+        .from('entries')
+        .select('tk')
+        .eq('content', userSession);
+
+    if(data && data[0]) {
+        document.getElementById('ttk').innerText = '৳' + data[0].tk;
+    }
 }
 
+// --- ৫. টাকা উইথড্র করা ---
 async function witdrow() {
-    const tk = parseFloat(document.getElementById('withdraw-amount').value);
+    const tkInput = document.getElementById('withdraw-amount').value;
+    const tkToWithdraw = parseFloat(tkInput);
     const userSession = localStorage.getItem("userSession");
-    if(!tk) return alert("টাকা লিখুন!");
-        const { data } = await supabaseClient
-            .from('entries')
-            .select('tk')
-            .eq('content', userSession);
-        const ttk = parseFloat(data[0].tk);
-        if(tk>ttk) return alert("আপনার কাছে এত টাকা নেই!");
+
+    if(!tkToWithdraw || isNaN(tkToWithdraw)) return alert("টাকা লিখুন!");
+
+    const { data } = await supabaseClient
+        .from('entries')
+        .select('tk')
+        .eq('content', userSession);
+
+    const currentTk = parseFloat(data[0].tk) || 0;
+
+    if(tkToWithdraw > currentTk) return alert("আপনার কাছে এত টাকা নেই!");
+
     const { error } = await supabaseClient
         .from('entries')
-        .update({ tk: ttk - tk })
+        .update({ tk: currentTk - tkToWithdraw })
         .eq('content', userSession);
+
     if(error) alert("এরর: " + error.message);
     else alert("টাকা উইথড্র হয়েছে!");
 }
 
-// ১. ইউজার ইনফো আপডেট এবং ফটো আপলোড
+// --- ৬. ইউজার প্রোফাইল আপডেট (ফটোসহ) ---
 async function updateUserInfo() {
     const name = document.getElementById('nameAccount').value;
     const newPassword = document.getElementById('changePassword').value;
@@ -122,11 +122,9 @@ async function updateUserInfo() {
 
     if(!name || !newPassword) return alert("সব ঘর পূরণ করুন!");
 
-    const parts = userSession.split(" : ");
-    const email = parts[0];
+    const email = userSession.split(" : ")[0];
     const updatedSession = email + " : " + newPassword;
 
-    // ডাটাবেস আপডেট
     const { error } = await supabaseClient
         .from('entries')
         .update({ content: updatedSession, nameuser: name })
@@ -135,69 +133,52 @@ async function updateUserInfo() {
     if (error) {
         alert("এরর: " + error.message);
     } else {
-        // যদি ফাইল সিলেক্ট করা থাকে তবে আপলোড হবে
         if(file){
-            // আপলোড করার সময় upsert: true দিলে পুরনো ছবি পরিবর্তন হয়ে নতুন ছবি আসবে
             const { error: uploadError } = await supabaseClient
                 .storage
                 .from('poorpbank')
                 .upload(email + '_profile', file, { upsert: true });
 
-            if (uploadError) {
-                alert("ফটো আপলোড এরর: " + uploadError.message);
-                return;
-            }
+            if (uploadError) alert("ফটো আপলোড এরর: " + uploadError.message);
         }
         alert("ইনফো আপডেট হয়েছে!");
         localStorage.setItem("userSession", updatedSession); 
     }
 }
 
-// ২. ইউজার ইনফো এবং ছবি লোড করা
+// --- ৭. ইউজার ইনফো লোড করা (Home Page) ---
 async function loadUserInfo() {
     const userSession = localStorage.getItem("userSession");
     if(!userSession) return;
 
-    const parts = userSession.split(" : ");
-    const email = parts[0];
+    const email = userSession.split(" : ")[0];
 
-    const { data, error } = await supabaseClient
+    const { data } = await supabaseClient
         .from('entries')
         .select('nameuser')
         .eq('content', userSession);
 
     if (data && data[0]) {
-        // নাম সেট করা
         const userName = data[0].nameuser || "User";
-        const nameElement = document.getElementById('currentName');
-        if(nameElement) nameElement.innerText = "Welcome, " + userName + "!";
-        
-        const homeName = document.getElementById('Name');
-        if(homeName) homeName.innerText = "Welcome, " + userName;
+        if(document.getElementById('currentName')) document.getElementById('currentName').innerText = "Welcome, " + userName + "!";
+        if(document.getElementById('Name')) document.getElementById('Name').innerText = "Welcome, " + userName;
 
-        // ছবির পাবলিক ইউআরএল নেওয়া
         const { data: photoData } = supabaseClient
             .storage
             .from('poorpbank')
             .getPublicUrl(email + '_profile');
 
-        if (photoData.publicUrl) {
-            // ছবির সোর্স আপডেট (Cache এড়িয়ে নতুন ছবি দেখানোর জন্য টাইমস্ট্যাম্প যোগ করা হয়েছে)
-            const finalUrl = photoData.publicUrl + "?t=" + new Date().getTime();
-            
-            const currentPhoto = document.getElementById('currentPhoto');
-            if(currentPhoto) currentPhoto.src = finalUrl;
-
-            const mainPhoto = document.getElementById('Photo');
-            if(mainPhoto) mainPhoto.src = finalUrl;
-        }
+        const finalUrl = photoData.publicUrl + "?t=" + new Date().getTime();
+        if(document.getElementById('currentPhoto')) document.getElementById('currentPhoto').src = finalUrl;
+        if(document.getElementById('Photo')) document.getElementById('Photo').src = finalUrl;
     }
 }
-
-// পেজ লোড হওয়ার পর একবার কল হবে
-loadUserInfo();
-
-// সেভ করা টাকা আপডেট দেখার জন্য ছোট ইন্টারভাল (১০০০ms থেকে বাড়িয়ে ৩০০০ms করা ভালো)
-setInterval(() => {
+function logout() {
+    localStorage.removeItem("userSession");
+    window.location.href = "index.html";
+}
+if(window.location.pathname.includes("home.html") || window.location.pathname.includes("user.html")) {
+    loadUserInfo();
     viewtk();
-}, 3000);
+    setInterval(viewtk, 1000);
+}
