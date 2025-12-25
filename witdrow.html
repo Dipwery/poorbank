@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Withdraw Funds</title>
     <link rel="stylesheet" href="style2.css">
+     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     <header>
@@ -14,7 +15,7 @@
         <div id="withdraw-form">
             <h2>Enter Withdrawal Details</h2>
             <input type="number" id="withdraw-amount" placeholder="Enter amount to withdraw" min="0" step="0.01">
-            <button id="withdraw-button" onclick="Withdraw()">Save Withdrawal</button>
+            <button id="withdraw-button" onclick="witdrow()">Save Withdrawal</button>
         </div>
     </div>
     <script src="main.js"></script>

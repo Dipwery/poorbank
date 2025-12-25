@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Deposit Funds</title>
     <link rel="stylesheet" href="style2.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     <header>
@@ -14,7 +15,7 @@
         <div id="deposit-form">
             <h2>Enter Deposit Details</h2>
             <input type="number" id="amount" placeholder="Enter amount to deposit" min="0" step="0.01">
-            <button id="deposit-button" onclick="saveDeposit()">Save Deposit</button>
+            <button id="deposit-button" onclick="savetk()">Save Deposit</button>
         </div>
     </div>
     <script src="main.js"></script>

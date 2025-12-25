@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>user</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="style1.css">
+</head>
+<body>
+    <header>
+        <h1>User Page</h1>
+    </header>
+    <h1 id="currentName">Welcome, User!</h1>
+    <br /><br />
+    <img id="currentPhoto" src="default-user.png" alt="User Photo" width="150px" height="150px" />
+    <br /><br />
+    <h3> name account:-</h3>
+    <input type="text" id="nameAccount" placeholder="name account" />
+    <br /><br />
+    <h3> upload photo:-</h3>
+    <input type="file" id="userPhoto" accept="image/*" />
+    <br /><br />
+    <h3> chenge password:-</h3>
+    <input type="password" id="changePassword" placeholder="new password" />
+    <br /><br />
+    <button id="updateUser" onclick="updateUserInfo()">Update Info</button>
+    <script src="main.js"></script> 
+</body>
+</html>
